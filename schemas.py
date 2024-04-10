@@ -41,3 +41,22 @@ class Company(BaseModel):
     waste_generation: str = None
     business_travel: str = None
     total: str = None
+
+    def calculate_energy_usage(self)->float:
+         self.energy_usage=(self.electricity * 12 * 0.0005)+ (self.natural_gas * 12 * 0.0053)+ (self.fuel * 12 * 2.32)
+         return self.energy_usage
+    
+    def calculate_waste_generation(self)->float:
+        self.waste_generation = self.waste * 12 * (0.57 - self.recycled_percent)
+        return self.waste_generation
+
+    def calculate_business_travel(self)->float:
+        self.business_travel = self.business_travels * (1 / self.fuel_efficency) * 2.31
+        return self.business_travel
+
+    def calculate_total(self)->float:
+        self.total=self.energy_usage+self.waste_generation+self.business_travel
+        return self.total
+
+    class Config:
+        from_attributes = True

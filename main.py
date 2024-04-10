@@ -1,7 +1,7 @@
 from typing import Annotated
 
-from fastapi import Body, FastAPI
-from schemas import Company
+from fastapi import Body, FastAPI, HTTPException
+import schemas
 
 app = FastAPI()
 
@@ -12,9 +12,9 @@ def read_root():
 
 
 # company_id will be used later
-@app.put(
-    "/companies/{company_id}",
-    response_model=Company,
+@app.post(
+    "/companies/",
+    response_model=schemas.Company,
     responses={
         # example of succss response
         200: {
@@ -40,10 +40,9 @@ def read_root():
         }
     },
 )
-async def update_company(
-    company_id: int,
+async def create_company(
     company: Annotated[
-        Company,
+        schemas.Company,
         Body(
             # input example
             examples=[
@@ -60,15 +59,8 @@ async def update_company(
         ),
     ],
 ):
-    energy_usage = (
-        (company.electricity * 12 * 0.0005)
-        + (company.natural_gas * 12 * 0.0053)
-        + (company.fuel * 12 * 2.32)
-    )
-    waste_generation = company.waste * 12 * (0.57 - company.recycled_percent)
-    business_travel = company.business_travels * (1 / company.fuel_efficency) * 2.31
+   
     result = {
-        "company_id": company_id,
         "electricity": company.electricity,
         "natural_gas": company.natural_gas,
         "fuel": company.fuel,
@@ -76,11 +68,9 @@ async def update_company(
         "recycled_percent": company.recycled_percent,
         "business_travels": company.business_travels,
         "fuel_efficency": company.fuel_efficency,
-        "energy_usage": str(energy_usage) + " " + "KG Co2/year",
-        "waste_generation": str(waste_generation) + " " + "KG Co2/year",
-        "business_travel": str(business_travel) + " " + "KG Co2/year",
-        "total": str(energy_usage + waste_generation + business_travel)
-        + " "
-        + "KG Co2/year",
+        "energy_usage": str(company.calculate_energy_usage()) + " " + "KG Co2/year",
+        "waste_generation": str(company.calculate_waste_generation()) + " " + "KG Co2/year",
+        "business_travel": str(company.calculate_business_travel()) + " " + "KG Co2/year",
+        "total": str(company.calculate_total())+" "+ "KG Co2/year",
     }
     return result
