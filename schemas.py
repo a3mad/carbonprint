@@ -2,6 +2,13 @@ from pydantic import BaseModel, Field
 
 class Company(BaseModel):
     #fields' type, validations, title, and description
+    id: int = None
+    title: str = Field(
+        min_length=1,
+        max_length=50,
+        title="Company title",
+        description="what is your company name?",
+    )
     electricity: float = Field(
         gt=0,
         title="Monthly electricity bill in EUR",
@@ -24,6 +31,7 @@ class Company(BaseModel):
     )
     recycled_percent: float = Field(
         gt=0,
+        le=1,
         title="Waste Recycling/composting percentage",
         description="How much of that generated waste is recycled or composted(in percentage)?",
     )
@@ -37,10 +45,10 @@ class Company(BaseModel):
         title="Fuel efficency in L/100KM",
         description="What is the average fuel efficeny of the vichels used for business travel in liters per 100 kilometers?",
     )
-    energy_usage: str = None
-    waste_generation: str = None
-    business_travel: str = None
-    total: str = None
+    energy_usage: float = None
+    waste_generation: float = None
+    business_travel: float = None
+    total: float = None
 
     def calculate_energy_usage(self)->float:
          self.energy_usage=(self.electricity * 12 * 0.0005)+ (self.natural_gas * 12 * 0.0053)+ (self.fuel * 12 * 2.32)
@@ -59,4 +67,6 @@ class Company(BaseModel):
         return self.total
 
     class Config:
+        #orm_mode = True
         from_attributes = True
+       #underscore_attrs_are_private = True

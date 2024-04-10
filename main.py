@@ -1,15 +1,33 @@
 from typing import Annotated
 
-from fastapi import Body, FastAPI, HTTPException
-import schemas
+from fastapi import Body, Depends, FastAPI, HTTPException
+from typing import List
+from sqlalchemy.orm import Session
+
+import crud, models, schemas
+from database import SessionLocal, engine
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @app.get("/")
 def read_root():
     return {"Project": "Carbon footprint estimator"}
 
+@app.get("/companies/", response_model=List[schemas.Company])
+def read_companies(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    companies = crud.get_companies(db, skip=skip, limit=limit)
+    return companies
 
 # company_id will be used later
 @app.post(
@@ -22,6 +40,8 @@ def read_root():
             "content": {
                 "application/json": {
                     "example": {
+                        "id":1,
+                        "title": "My Company",
                         "electricity": 5000,
                         "natural_gas": 10000,
                         "fuel": 15000,
@@ -47,6 +67,7 @@ async def create_company(
             # input example
             examples=[
                 {
+                    "title": "MY company",
                     "electricity": 5000,
                     "natural_gas": 10000,
                     "fuel": 15000,
@@ -58,19 +79,7 @@ async def create_company(
             ],
         ),
     ],
+    db: Session = Depends(get_db),
 ):
-   
-    result = {
-        "electricity": company.electricity,
-        "natural_gas": company.natural_gas,
-        "fuel": company.fuel,
-        "waste": company.waste,
-        "recycled_percent": company.recycled_percent,
-        "business_travels": company.business_travels,
-        "fuel_efficency": company.fuel_efficency,
-        "energy_usage": str(company.calculate_energy_usage()) + " " + "KG Co2/year",
-        "waste_generation": str(company.calculate_waste_generation()) + " " + "KG Co2/year",
-        "business_travel": str(company.calculate_business_travel()) + " " + "KG Co2/year",
-        "total": str(company.calculate_total())+" "+ "KG Co2/year",
-    }
-    return result
+
+   return crud.create_company(db=db, company=company)
