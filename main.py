@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Body, Depends, FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from typing import List
 from sqlalchemy.orm import Session
 
@@ -24,9 +25,10 @@ def get_db():
 def read_root():
     return {"Project": "Carbon footprint estimator"}
 
+
 @app.get("/companies/", response_model=List[schemas.Company])
-def read_companies(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    companies = crud.get_companies(db, skip=skip, limit=limit)
+def read_companies(sort_by: str = "", db: Session = Depends(get_db)):
+    companies = crud.get_companies(db, sort_by=sort_by)
     return companies
 
 # company_id will be used later

@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
 
 import models, schemas
 
@@ -7,8 +8,19 @@ def get_company(db: Session, company_id: int):
     return db.query(models.Company).filter(models.Company.id == company_id).first()
 
 
-def get_companies(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Company).offset(skip).limit(limit).all()
+def get_companies(db: Session,sort_by:str=""):
+    query= db.query(models.Company)
+    if sort_by=="energy_usage":
+        query=query.order_by(desc(models.Company.energy_usage))
+    elif sort_by=="waste_generation":
+        query=query.order_by(desc(models.Company.waste_generation))
+    elif sort_by=="business_travel":
+        query=query.order_by(desc(models.Company.business_travel))
+    elif sort_by=="total":
+        query=query.order_by(desc(models.Company.total))
+    else:
+        pass
+    return query.all()
 
 
 def create_company(db: Session, company: schemas.Company):
